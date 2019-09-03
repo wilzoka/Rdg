@@ -1,0 +1,304 @@
+<style>
+    .wizard-steps {
+        overflow: hidden;
+        position: relative;
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .wizard-progress {
+        position: absolute;
+        top: 24px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: #ddd;
+    }
+
+    .wizard-progress-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 3px;
+        background: #3c8dbc;
+    }
+
+    .wizard-step {
+        position: relative;
+        float: left;
+        width: 25%;
+        padding: 0 5px;
+    }
+
+    .wizard-step-icon {
+        cursor: not-allowed;
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        margin-top: 4px;
+        background: #ddd;
+        font-size: 16px;
+        color: #fff;
+        line-height: 40px;
+        -moz-border-radius: 50%;
+        -webkit-border-radius: 50%;
+        border-radius: 50%;
+    }
+
+    .wizard-step.activated .wizard-step-icon {
+        cursor: pointer;
+        background: #fff;
+        border: 1px solid #3c8dbc;
+        color: #3f8ff3;
+        line-height: 38px;
+    }
+
+    .wizard-step.active .wizard-step-icon {
+        cursor: pointer;
+        width: 48px;
+        height: 48px;
+        margin-top: 0;
+        background: #3c8dbc;
+        font-size: 22px;
+        line-height: 48px;
+    }
+
+    .wizard-step p {
+        font-size: 11px;
+        color: #ccc;
+    }
+
+    .wizard-step.activated p {
+        color: #000000;
+    }
+
+    .wizard-step.active p {
+        color: #000000;
+        font-weight: bold;
+    }
+
+    .wizard fieldset {
+        display: none;
+        text-align: left;
+    }
+
+    .wizard fieldset.wizard-showing {
+        display: block;
+    }
+
+    .wizard-buttons {
+        text-align: right;
+    }
+</style>
+<style>
+    .selecao {
+        text-align: center;
+        font-size: 20px;
+        line-height: 19px;
+    }
+</style>
+<div class="hidden">
+    {{{hidden}}}
+</div>
+<div class="col-md-12">
+    <div class="box box-primary">
+        <div class="box-body">
+            <div class="wizard">
+                <input name="wizard-step" type="hidden" />
+                <div class="wizard-steps">
+                    <div class="wizard-progress">
+                        <div class="wizard-progress-line"></div>
+                    </div>
+                    <div class="wizard-step">
+                        <div class="wizard-step-icon">
+                            <i class="fa fa-user"></i>
+                        </div>
+                        <p>Cliente</p>
+                    </div>
+                    <div class="wizard-step">
+                        <div class="wizard-step-icon">
+                            <i class="fa fa-shopping-basket"></i>
+                        </div>
+                        <p>Produto</p>
+                    </div>
+                    <div class="wizard-step">
+                        <div class="wizard-step-icon">
+                            <i class="fa fa-truck"></i>
+                        </div>
+                        <p>Retorno</p>
+                    </div>
+                    <div class="wizard-step">
+                        <div class="wizard-step-icon">
+                            <i class="fa fa-money"></i>
+                        </div>
+                        <p>Pagamento</p>
+                    </div>
+                </div>
+
+                <fieldset>
+                    <div class="row">
+                        {{{cliente}}}
+
+                        <div id="table"></div>
+                    </div>
+
+                    <div class="wizard-buttons">
+                        <button type="button" class="btn btn-primary wizard-previous">
+                            <i class="fa fa-arrow-left"></i> Anterior</button>
+                        <button type="button" class="btn btn-primary wizard-save">Próximo
+                            <i class="fa fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <div class="row">
+                        {{{produto}}}
+                    </div>
+                    <div class="row">
+                        {{{produtoadd}}}
+                    </div>
+
+                    <div class="wizard-buttons">
+                        <button type="button" class="btn btn-primary wizard-previous">
+                            <i class="fa fa-arrow-left"></i> Anterior</button>
+                        <button type="button" class="btn btn-primary wizard-save">Próximo
+                            <i class="fa fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <div class="row">
+                        {{{retorno}}}
+                    </div>
+
+                    <div class="wizard-buttons">
+                        <button type="button" class="btn btn-primary wizard-previous">
+                            <i class="fa fa-arrow-left"></i> Anterior</button>
+                        <button type="button" class="btn btn-primary wizard-save">Próximo
+                            <i class="fa fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <div class="row">
+                        {{{pagamento}}}
+                    </div>
+                    <div class="row">
+                        {{{pagamentoadd}}}
+                    </div>
+
+                    <div class="wizard-buttons">
+                        <button type="button" class="btn btn-primary wizard-previous">
+                            <i class="fa fa-arrow-left"></i> Anterior</button>
+                        <button type="button" class="btn btn-primary wizard-save">Finalizar
+                            <i class="fa fa-flag"></i>
+                        </button>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function ($) {
+        var $wizard = $('.wizard');
+        var wizardsteps = $wizard.find('div.wizard-step');
+        var $wizardprogressline = $wizard.find('div.wizard-progress-line');
+        var fieldsets = $wizard.find('fieldset');
+        var stepwidth = 100 / wizardsteps.length;
+        var initialWidth = 100 / (fieldsets.length * 2);
+        var currentStep = 0;
+        var $wizardstep = $wizard.find('input[name="wizard-step"]');
+        var wizardstepicons = $wizard.find('div.wizard-step-icon');
+
+        $('select[name="idcliente"]').change(function () {
+            application.jsfunction('erp.comercial.venda.js_historicoCompras', { idcliente: $('select[name="idcliente"]').val() }, function (response) {
+                $('#table').children().remove();
+                $('#table').append(response.body);
+            });
+        });
+
+        for (var i = 0; i < wizardstepicons.length; i++) {
+            $(wizardstepicons[i]).attr('data-step', i);
+        }
+        function goStep(step) {
+            if (step < 0 || step >= wizardsteps.length) {
+                return;
+            }
+            currentStep = parseInt(step);
+            $wizardstep.val(currentStep);
+            if ($wizard.hasClass('wizard-finished')) {
+                for (var i = 0; i < wizardsteps.length; i++) {
+                    $(fieldsets[i]).removeClass('wizard-showing');
+                    $(wizardsteps[i]).removeClass('active');
+                    if (i == step) {
+                        $(fieldsets[i]).addClass('wizard-showing');
+                        $(wizardsteps[i]).addClass('active').removeClass('activated');
+                    } else {
+                        $(wizardsteps[i]).addClass('activated').removeClass('active');
+                    }
+                }
+            } else {
+                for (var i = 0; i < wizardsteps.length; i++) {
+                    $(fieldsets[i]).removeClass('wizard-showing');
+                    $(wizardsteps[i]).removeClass('active activated');
+                }
+                var wpb = 0;
+                for (var i = 0; i <= step; i++) {
+                    if (i == 0) {
+                        wpb = initialWidth;
+                    } else {
+                        wpb += stepwidth;
+                    }
+                    if (i == step) {
+                        $(fieldsets[i]).addClass('wizard-showing');
+                        $(wizardsteps[i]).addClass('active');
+                    } else {
+                        $(wizardsteps[i]).addClass('activated');
+                    }
+                    $wizardprogressline.css('width', wpb + '%');
+                }
+            }
+            $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+        }
+        function setWizardFinished() {
+            $wizardprogressline.css('width', '100%');
+            $wizard.addClass('wizard-finished');
+            for (var i = 0; i < wizardsteps.length; i++) {
+                if (!$(wizardsteps[i]).hasClass('active')) {
+                    $(wizardsteps[i]).addClass('activated');
+                }
+            }
+            $wizard.find('.wizard-buttons').remove();
+        }
+        $('.wizard-previous').click(function () {
+            goStep(currentStep - 1);
+        });
+        $('.wizard-next').click(function () {
+            goStep(currentStep + 1);
+        });
+        $('.wizard-save').click(function () {
+            $(document).find('button[type="submit"]').trigger('click');
+        });
+        $('.wizard-step-icon').click(function () {
+            if ($(this).parent().hasClass('activated')) {
+                goStep($(this).attr('data-step'));
+            }
+        });
+        if (application.functions.getId() > 0) {
+            goStep(Cookies.get('wizard-step') || 0);
+            if ($('input[name="digitado"]').is(':checked')) {
+                setWizardFinished();
+            }
+        } else {
+            goStep(0);
+        }
+        Cookies.remove('wizard-step');
+
+    });
+
+</script>

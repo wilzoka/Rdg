@@ -1,0 +1,68 @@
+<form id="form" class="xhr" autocomplete="off">
+    <section class="content">
+        <div class="row">
+            <div class="hidden">
+
+            </div>
+
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <div class="progress-group">
+                                    <span class="progress-text">Meta Diária</span>
+                                    <span class="progress-number">
+                                        <b>160</b>/200</span>
+                                    <div class="progress sm">
+                                        <div class="progress-bar progress-bar-aqua" style="width: 80%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6">
+                                <div class="progress-group">
+                                    <span class="progress-text">Meta Mensal</span>
+                                    <span class="progress-number">
+                                        <b>140</b>/1200</span>
+                                    <div class="progress sm">
+                                        <div class="progress-bar progress-bar-green" style="width: 30%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <a href="/v/cliente/0">
+                                    <button type="button" style="border-radius: 4px" class="btn btn-primary btn-block btn-lg">Cliente</button>
+                                </a>
+                            </div>
+                            <div class="col-xs-6">
+                                <a href="/v/venda/0">
+                                    <button type="button" style="border-radius: 4px" class="btn btn-primary btn-block btn-lg">Venda</button>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="box box-primary">
+                    <div class="box-body">
+                        <div class="row">
+                            <div id="table"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</form>
+
+<script type="text/javascript">
+    $(function ($) {
+        $(document).ready(function () {
+            application.jsfunction('erp.comercial.venda.js_prevenda', { idcliente: $('table').val() }, function (response) {
+                $('#table').children().remove();
+                $('#table').append(response.body);
+            });
+        });
+    });
+</script>
