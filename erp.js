@@ -124,8 +124,8 @@ let main = {
                                                         valortaxas += formaspgto[j].taxa != null ? parseFloat((parseFloat(vendaformaspgto[i].valor) * formaspgto[j].taxa) / 100) : 0;
                                                         totalparcelas += formaspgto[j].parcelas != null ? formaspgto[j].parcelas : 0;
                                                         let valorparcela = totalparcelas == 0 ? vendaformaspgto[i].valor : (vendaformaspgto[i].valor - valortaxas) / totalparcelas;
-                                                        let datavenc = moment().add(prazo + 1, 'day');
-                                                        if (totalparcelas > 1) {
+                                                        let datavenc = moment().add(prazo, 'day');
+                                                        if (totalparcelas > 0) {
                                                             for (let l = 0; l < totalparcelas; l++) {
                                                                 let mov = await db.getModel('fin_mov').create({
                                                                     datavcto: datavenc
@@ -139,7 +139,7 @@ let main = {
                                                                     , idvenda: obj.register.id
                                                                     , detalhe: `Venda ID ${obj.register.id}`
                                                                 })
-                                                                datavenc = datavenc.add(1, 'M');
+                                                                datavenc = datavenc.add(prazo, 'day');
                                                             }
                                                         } else {
                                                             let mov = await db.getModel('fin_mov').create({
