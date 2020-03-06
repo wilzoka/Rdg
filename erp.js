@@ -567,7 +567,7 @@ let main = {
                         if (formareceb.formarecebimento == 'a Prazo' && formareceb.prazo == null && obj.register.vencimento == null) {
                             return application.error(obj.res, { msg: `Venda a prazo. Informe o vencimento` });
                         }
-                        next(obj)
+                        await next(obj);
                     } catch (err) {
                         return application.fatal(obj.res, err);
                     }
