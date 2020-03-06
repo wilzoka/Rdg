@@ -540,7 +540,7 @@ let main = {
                         if (obj.register.id == 0) {
                             obj.register.datahora = moment();
                         }
-                        next(obj);
+                        await next(obj);
                     } catch (err) {
                         return application.fatal(obj.res, err);
                     }
@@ -694,7 +694,7 @@ let main = {
                         if (obj.register.id == 0) {
                             obj.register.saldoatual = 0;
                         }
-                        next(obj);
+                        await next(obj);
                     } catch (err) {
                         return application.fatal(obj.res, err);
                     }
@@ -761,7 +761,7 @@ let main = {
                         if (count > 0) {
                             return application.error(obj.res, { msg: 'Existe um fechamento de caixa maior que desta data' });
                         }
-                        next(obj);
+                        await next(obj);
                     } catch (err) {
                         return application.fatal(obj.res, err);
                     }
@@ -776,7 +776,7 @@ let main = {
                         if (obj.register.formarecebimento == 'a Prazo' && obj.register.parcelas == null) {
                             return application.error(obj.res, { msg: 'É obrigatório informar no mínimo 1 parcela para contas a prazo' });
                         }
-                        next(obj);
+                        await next(obj);
                     } catch (err) {
                         return application.fatal(obj.res, err);
                     }
