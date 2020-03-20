@@ -1,0 +1,58 @@
+<div class="col-md-12">
+    <div class="nav-tabs-custom">
+        <ul class="nav nav-tabs">
+            <li class="active">
+                <a href="#tab_1" data-toggle="tab"> Geral</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+
+            <div class="tab-pane active" id="tab_1">
+                <div class="row">
+
+                    {{{geral}}}
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function ($) {
+        setTimeout(() => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            }
+            else {
+                console.log("Seu browser não suporta Geolocalização.")
+            }
+
+            function showPosition(position) {
+                $('input[name="complemento"]').val(position.coords.latitude + "," + position.coords.longitude);
+                console.log("Latitude: " + position.coords.latitude +
+                    "<br>Longitude: " + position.coords.longitude);
+            }
+            function showError(error) {
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        alert("Usuário rejeitou a solicitação de Geolocalização.")
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        alert("Localização indisponível.")
+                        break;
+                    case error.TIMEOUT:
+                        alert("A requisição expirou.")
+                        break;
+                    case error.UNKNOWN_ERROR:
+                        alert("Algum erro desconhecido aconteceu.")
+                        break;
+                }
+            }
+        }, 2000);
+
+
+    });
+
+</script>
