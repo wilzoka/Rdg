@@ -18,10 +18,22 @@ let main = {
                             obj.register.fornecedor = true;
                             pessoatipo = 'fornecedor';
                         }
+                        if (obj.register.localizacao) {
+                            if (obj.register._previousDataValues.localizacao != obj.register.localizacao) {
+                                const geo = await main.platform.map.geocode(obj.register.localizacao);
+                                if (geo.length > 0) {
+                                    obj.register.endereco = geo[0].formatted_address;
+                                } else {
+                                    obj.register.endereco = null;
+                                }
+                            }
+                        } else {
+                            obj.register.endereco = null;
+                        }
                         let saved = await next(obj);
 
                         if (saved.success) {
-                            let pessoa = await db.getModel('cad_pessoa').findOne({ where: { id: saved.register.id } })
+                            const pessoa = await db.getModel('cad_pessoa').findOne({ where: { id: saved.register.id } })
                             main.platform.notification.create([4], {
                                 title: 'Novo ' + pessoatipo
                                 , description: pessoa.fantasia
@@ -29,7 +41,7 @@ let main = {
                             });
                         }
 
-                        db.sequelize.query("update cad_pessoa p set nomecompleto = coalesce(p.fantasia,'') || ' - ' || coalesce(p.bairro,'') || ' - ' || coalesce(p.logradouro,'') || ' - Nº ' || p.numero  || ' - ' || coalesce(p.complemento,'') where id = :idcliente;"
+                        db.sequelize.query("update cad_pessoa p set nomecompleto = coalesce(p.fantasia,'') || ' - ' || coalesce(p.endereco,'') || ' - Nº ' || p.numero  || ' - ' || coalesce(p.complemento,'') where id = :idcliente;"
                             , {
                                 type: db.sequelize.QueryTypes.UPDATE
                                 , replacements: { idcliente: obj.register.id }
@@ -156,10 +168,10 @@ let main = {
                                                             })
                                                         }
                                                     } else if (formaspgto[j].formarecebimento == 'Vale') {
-                                                        let retorno = await main.erp.comercial.venda.f_atualizarValeColetado(formaspgto[j], obj.register);
-                                                        if (!retorno) {
-                                                            return application.error(obj.res, { msg: `Vale não cadastrado. Solicitar cadastro` });
-                                                        }
+                                                        // let retorno = await main.erp.comercial.venda.f_atualizarValeColetado(formaspgto[j], obj.register);
+                                                        // if (!retorno) {
+                                                        //     return application.error(obj.res, { msg: `Vale não cadastrado. Solicitar cadastro` });
+                                                        // }
                                                     }
                                                     valorestante -= vendaformaspgto[i].valor;
                                                 }
@@ -566,6 +578,9 @@ let main = {
                         let formareceb = await db.getModel('fin_formapgto').findOne({ where: { id: obj.register.idformapgto } })
                         if (formareceb.formarecebimento == 'a Prazo' && formareceb.prazo == null && obj.register.vencimento == null) {
                             return application.error(obj.res, { msg: `Venda a prazo. Informe o vencimento` });
+                        }
+                        if (formareceb.formarecebimento == 'Vale' && !obj.register.idconvenio) {
+                            return application.error(obj.res, { msg: `Selecione um Convênio`, invalidfields: ['idconvenio'] });
                         }
                         await next(obj);
                     } catch (err) {
@@ -1223,6 +1238,77 @@ let main = {
 
                     } catch (err) {
                         return application.fatal(obj.res, err);
+                    }
+                }
+            }
+            , vale: {
+                e_gerarCobranca: async (obj) => {
+                    try {
+                        if (obj.req.method == 'GET') {
+                            let body = '';
+                            if (obj.ids.length <= 0) {
+                                return application.error(obj.res, { msg: application.message.selectOneEvent });
+                            }
+                            body += application.components.html.hidden({
+                                name: 'ids'
+                                , value: obj.ids.join(',')
+                            });
+                            body += application.components.html.autocomplete({
+                                width: '12'
+                                , label: 'Categoria*'
+                                , name: 'idcategoria'
+                                , model: 'fin_categoria'
+                                , attribute: 'descricaocompleta'
+                                , where: 'dc = 2'
+                            });
+                            body += application.components.html.autocomplete({
+                                width: '12'
+                                , label: 'Pessoa*'
+                                , name: 'idpessoa'
+                                , model: 'cad_pessoa'
+                                , attribute: 'nome'
+                            });
+                            body += application.components.html.date({
+                                width: '12'
+                                , label: 'Vencimento*'
+                                , name: 'vcto'
+                            });
+                            application.success(obj.res, {
+                                modal: {
+                                    form: true
+                                    , id: 'modalevt'
+                                    , action: '/event/' + obj.event.id
+                                    , title: obj.event.description
+                                    , body: body
+                                    , footer: '<button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button> <button type="submit" class="btn btn-primary">Gerar</button>'
+                                }
+                            });
+                        } else {
+                            const invalidfields = application.functions.getEmptyFields(obj.req.body, ['ids', 'idcategoria', 'idpessoa', 'vcto']);
+                            if (invalidfields.length > 0) {
+                                return application.error(obj.res, { msg: application.message.invalidFields, invalidfields: invalidfields });
+                            }
+                            const venformapgto = await db.getModel('com_vendapagamento').findAll({ where: { id: { [db.Op.in]: obj.req.body.ids.split(',') } } });
+                            let total = 0;
+                            let ids = [];
+                            for (let i = 0; i < venformapgto.length; i++) {
+                                const el = venformapgto[i];
+                                total += el.valor;
+                                ids.push(el.id);
+                            }
+                            await db.getModel('fin_mov').create({
+                                idcategoria: obj.req.body.idcategoria
+                                , idpessoa: obj.req.body.idpessoa
+                                , datavcto: application.formatters.be.date(obj.req.body.vcto)
+                                , valor: total
+                                , quitado: false
+                                , detalhe: 'Vales: ' + ids.join(',')
+                            });
+                            await db.getModel('com_vendapagamento').update({ f_valeemitidocobranca: true }, { where: { id: { [db.Op.in]: obj.req.body.ids.split(',') } } });
+                            application.success(obj.res, { msg: application.message.success, reloadtables: true });
+                        }
+                    } catch (err) {
+                        application.fatal(obj.res, err);
                     }
                 }
             }
